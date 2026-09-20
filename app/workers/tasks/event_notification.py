@@ -17,8 +17,6 @@ from app.workers.celery_app import celery_app
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-resend.api_key = settings.resend_api_key
-
 @celery_app.task(bind=True, max_retries=5, default_retry_delay=60, acks_late=True)
 def notify_event_update(self, event_id_str: str, event_version: int):
     logger.info(f"Event update notification started: event_id={event_id_str} version={event_version}")
@@ -92,6 +90,10 @@ def notify_event_update(self, event_id_str: str, event_version: int):
             customer_email = getattr(customer, "email", f"{customer.id}@example.com")
             
             try:
+                if not settings.resend_api_key:
+                    raise ValueError("RESEND_API_KEY is not set. Worker cannot send emails.")
+                resend.api_key = settings.resend_api_key
+                
                 resend.Emails.send({
                     "from": settings.email_from,
                     "to": customer_email,

@@ -17,8 +17,6 @@ from app.workers.celery_app import celery_app
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-resend.api_key = settings.resend_api_key
-
 @celery_app.task(bind=True, max_retries=5, default_retry_delay=60, acks_late=True)
 def send_booking_confirmation(self, booking_id_str: str):
     logger.info(f"Booking confirmation queued: booking_id={booking_id_str}")
@@ -98,6 +96,10 @@ def send_booking_confirmation(self, booking_id_str: str):
             # So I will use `f"{customer.name.replace(' ', '.').lower()}@example.com"` if there's no email. Wait! Is there an email in `User`? Let me check `user.py` again.
             
             customer_email = getattr(customer, "email", f"{customer.id}@example.com")
+            
+            if not settings.resend_api_key:
+                raise ValueError("RESEND_API_KEY is not set. Worker cannot send emails.")
+            resend.api_key = settings.resend_api_key
             
             resend.Emails.send({
                 "from": settings.email_from,

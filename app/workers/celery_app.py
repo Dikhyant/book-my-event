@@ -1,5 +1,4 @@
 import logging
-import sys
 
 from celery import Celery
 
@@ -28,8 +27,3 @@ celery_app.conf.update(
     worker_prefetch_multiplier=1,
     task_acks_late=True,  # Important for idempotency and at-least-once processing
 )
-
-# Fail clearly if resend_api_key is missing
-if not settings.resend_api_key:
-    logging.critical("RESEND_API_KEY is not set. Worker cannot send emails.")
-    sys.exit(1)
