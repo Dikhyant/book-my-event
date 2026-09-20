@@ -37,6 +37,10 @@ class Booking(Base):
         nullable=False,
     )
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    idempotency_key: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=True,
+    )
     status: Mapped[BookingStatus] = mapped_column(
         Enum(
             BookingStatus,
