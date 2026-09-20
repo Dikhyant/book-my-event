@@ -71,7 +71,29 @@ def create_booking(
 
     db.refresh(new_booking)
 
-    from app.workers.tasks.booking_email import send_booking_confirmation
-    send_booking_confirmation.delay(str(new_booking.id))
+    try:
+        from app.workers.celery_app import celery_app
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Redact credentials for logging
+        from urllib.parse import urlparse
+        parsed = urlparse(celery_app.conf.broker_url)
+        safe_broker = f"{parsed.scheme}://{parsed.hostname}:{parsed.port}{parsed.path}"
+        
+        logger.info(f"DIAGNOSTIC: Celery app name: {celery_app.main}")
+        logger.info(f"DIAGNOSTIC: Broker URL (redacted): {safe_broker}")
+        logger.info(f"DIAGNOSTIC: Task to be called: app.workers.tasks.booking_email.send_booking_confirmation")
+        
+        from app.workers.tasks.booking_email import send_booking_confirmation
+        logger.info(f"DIAGNOSTIC: Calling .delay({new_booking.id})")
+        
+        result = send_booking_confirmation.delay(str(new_booking.id))
+        
+        logger.info(f"DIAGNOSTIC: Task published successfully! Task ID: {result.id}")
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"DIAGNOSTIC: Failed to publish task: {e}", exc_info=True)
 
     return new_booking
