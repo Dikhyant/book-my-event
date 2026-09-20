@@ -70,4 +70,8 @@ def create_booking(
         raise
 
     db.refresh(new_booking)
+
+    from app.workers.tasks.booking_email import send_booking_confirmation
+    send_booking_confirmation.delay(str(new_booking.id))
+
     return new_booking

@@ -123,6 +123,10 @@ def update_event(
     
     db.commit()
     db.refresh(event)
+
+    from app.workers.tasks.event_notification import notify_event_update
+    notify_event_update.delay(str(event.id), event.version)
+
     return event
 
 
