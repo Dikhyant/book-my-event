@@ -28,6 +28,11 @@ class Event(Base):
         ForeignKey("public.users.id"),
         nullable=False,
     )
+    version: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        server_default="1",
+    )
     created_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
