@@ -14,3 +14,5 @@ dist/
 build/
 *.log
 .DS_Store
+
+load_tests/test_users.json
